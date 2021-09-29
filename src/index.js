@@ -6,11 +6,27 @@ const VueGeolocation = {
     Vue.prototype.$clearLocationWatch = VueGeolocation.clearLocation
   },
   getLocation (options = {}, forceReject = false) {
+    const { useLocalStorage, ...otherOptions } = options
+
     return new Promise((resolve, reject) => {
       if(forceReject) {
         reject('reject forced for testing purposes')
         return
       }
+
+      if (useLocalStorage) {
+        try {
+          const storedLocation = JSON.parse(window.localStorage.getItem('userLocation'))
+          if (!storedLocation || typeof storedLocation !== 'object') {
+            reject('no position access')
+          }
+          resolve(storedLocation)
+        } catch (error) {
+          reject('no position access')
+        }
+        return
+      }
+
       if (!VueGeolocation._isAvailable()) {
         reject('no browser support')
       } else {
@@ -27,7 +43,7 @@ const VueGeolocation = {
           () => {
             reject('no position access')
           },
-          options
+          otherOptions
         )
       }
     })
